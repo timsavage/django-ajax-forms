@@ -1,35 +1,25 @@
 from django import forms
 from django.utils.translation import ugettext as _
 
-
 class AlreadyRegistered(Exception):
-    """
-    An attempt was made to register a form field more than once
-    """
+    "An attempt was made to register a form field more than once"
     pass
-
 
 registry = {}
 
 def register(field, ajax_field):
-    '''
-    Assigns a mask class to a field
-    '''
+    "Register an ajax_field for a field"
     if field in registry:
         raise AlreadyRegistered(_('The form field %s has already been registered.') % field.__name__)
     registry[field] = ajax_field
 
-def factory(field):
-    '''
-    Create a FieldMask object based a fields type
-    '''
-    ajax_field = registry.get(type(field), AjaxField)
-    return ajax_field(field)
-
+def factory(field_instance):
+    "Get a ajax_field instance for a feild instance"
+    ajax_field = registry.get(type(field_instance), AjaxField)
+    return ajax_field(field_instance)
 
 class AjaxField(object):
     "Base field mask"
-
     def __init__(self, field):
         self.field = field
         self._validators = None
@@ -57,7 +47,6 @@ class AjaxField(object):
 
 
 class AjaxCharField(AjaxField):
-
     def parse(self):
         super(AjaxCharField, self).parse()
         self.add_simple_validator('max_length')

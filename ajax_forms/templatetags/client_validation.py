@@ -4,16 +4,13 @@ from ajax_forms.utils import form_to_json
 
 register = template.Library()
 
-
 class RenderFormValidationNode(template.Node):
-
     def __init__(self, form):
         self.form = template.Variable(form)
 
     def render(self, context):
         form = self.form.resolve(context)
         return form_to_json(form)
-
 
 @register.tag
 def render_form_fields(parser, token):
