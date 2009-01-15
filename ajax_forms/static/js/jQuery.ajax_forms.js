@@ -1,28 +1,32 @@
 (function($) {
 
-    $.fn.validation = function(settings) {
-        settings = $.extend({
-            fields: {},
-            token_valid: 'valid',
-            token_invalid: 'invalid',
-        }, settings);
+    $.fn.validation = function(fields, options) {
+        // Setup options
+        opts = $.extend({}, $.fn.validation.defaults, options);
 
         function validate_field(field) {
-            var validators = field.data('validators');
+            field.next().addClass(opts.style.processing);
             var field_valid = true;
-            if (validators.required) {
-                field_valid &= field.val().length != 0;
+
+            var validators = field.data('validators');
+            for (key in validators) {
+                validator = $.fn.validation.validators[key]
+                if (validator) {
+                    field_valid &= validator(field, validators[key]);
+                }
             }
 
             if (field_valid) {
                 field.next()
-                    .addClass(settings.token_valid)
-                    .removeClass(settings.token_invalid);
+                    .addClass(opts.style.valid)
+                    .removeClass(opts.style.invalid);
             } else {
                 field.next()
-                    .removeClass(settings.token_valid)
-                    .addClass(settings.token_invalid);
+                    .removeClass(opts.style.valid)
+                    .addClass(opts.style.invalid);
             }
+
+            field.next().removeClass(opts.style.processing);
             return field_valid;
         }
 
@@ -30,34 +34,34 @@
             validate_field($(this));
         }
 
-        /*function validate_form_onsubmit() {
+        function validate_form_onsubmit() {
             var first_fail = null;
             var form = $(this);
 
-            $.each(settings.validators, function() {
-                var element = form.find('[name='+field.name+']');
-                if (!validate_field($(element))) {
-                    if (first_fail == null) {
-                        first_fail = $(element);
+            $.each(fields, function() {
+                var field = form.find(':input[name='+this.name+']');
+                if (field) {
+                    if (!validate_field(field)) {
+                        if (first_fail == null) {
+                            first_fail = field;
+                        }
                     }
                 }
             });
 
             if (first_fail != null) {
                 first_fail.focus();
-                form.find(':submit').next().show().fadeout(1000);
                 return false;
             }
             return true;
-        }*/
+        }
 
         return $(this).each(function() {
             var form = $(this);
-            var fields = form.find(':input');
 
             // Setup fields
-            $.each(settings.fields, function() {
-                var field = form.find('[name='+this.name+']');
+            $.each(fields, function() {
+                var field = form.find(':input[name='+this.name+']');
                 if (field) {
                     $('<span>&nbsp;</span>').insertAfter(field);
                     $(field)
@@ -67,9 +71,29 @@
             });
 
             // Setup form events
-            //$('<span>Form not valid!</span>').hide().insertAfter(form.find(':submit'));
-            //form.submit(validate_form_onsubmit);
+            form.submit(validate_form_onsubmit);
         });
+    };
+
+    $.fn.validation.defaults = {
+        // Default style to work around
+        format: 'table',
+        // Classes applied in various states
+        style: {
+            valid: 'valid',
+            invalid: 'invalid',
+            processing: 'processing'
+        }
+    };
+
+    $.fn.validation.validators = {
+        // Field requires a value
+        'required': function(field, params) {
+            if ($(field).val().length <= 0) {
+                return false
+            }
+            return true;
+        }
     };
 
 })(jQuery);

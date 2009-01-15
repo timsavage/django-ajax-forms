@@ -1,12 +1,11 @@
-from simplejson import JSONEncoder
-
-from django.utils.functional import Promise
 from django.utils.encoding import force_unicode
+from django.utils.functional import Promise
+from django.utils.simplejson import JSONEncoder
 
 from ajax_forms.ajax_fields import factory as field_factory
 
 __all__ = (
-    'form_to_json'
+    'form_to_json', 'LazyEncoder'
 )
 
 class LazyEncoder(JSONEncoder):
@@ -19,8 +18,9 @@ json_serializer = LazyEncoder()
 
 
 def form_to_json(form):
-    data = []
+    # Generate ajax fields
+    ajax_fields = []
     for name, field in form.fields.items():
         ajax_field = field_factory(field)
-        data.append({'name': form.add_prefix(name), 'validators': ajax_field.validators})
-    return json_serializer.encode(data)
+        ajax_fields.append({'name': form.add_prefix(name), 'validators': ajax_field.validators})
+    return json_serializer.encode(ajax_fields)
