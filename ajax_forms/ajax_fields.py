@@ -1,153 +1,177 @@
 from django import forms
 from django.utils.translation import ugettext as _
 
+
 class AlreadyRegistered(Exception):
     "An attempt was made to register a form field more than once"
     pass
 
+
 registry = {}
+
 
 def register(field, ajax_field):
     "Register an ajax_field for a field"
     if field in registry:
-        raise AlreadyRegistered(_('The form field %s has already been registered.') % field.__name__)
+        raise AlreadyRegistered(
+            _('The form field %s has already been registered.') %
+                field.__name__)
     registry[field] = ajax_field
 
-def factory(field_instance):
+
+def factory(field_instance, name):
     "Get a ajax_field instance for a feild instance"
     ajax_field = registry.get(type(field_instance), AjaxField)
-    return ajax_field(field_instance)
+    return ajax_field(field_instance, name)
 
 
 class AjaxField(object):
     "Base field mask"
-    def __init__(self, field):
-        self.field = field
+
+    data_type = "String"
+
+    def __init__(self, field_instance, name):
+        self.field = field_instance
+        self.name = name
         self._validators = None
+        self._error_messages = {}
+
+    def add_error_message(self, message_key):
+        "Add an error message to be sent to client"
+        self._error_messages[message_key] = \
+            self.field.error_messages.get(message_key)
 
     def add_simple_validator(self, name, message_key=None):
         "Add a simple validator that just validates an item meets a format."
         if message_key is None:
             message_key = name
-        error_message = self.field.error_messages.get(message_key)
-        self._validators[name] = {'error_message': error_message}
+        self.add_error_message(message_key)
+        self._validators.append({'type': name, 'arg': None})
 
-    def add_param_validator(self, name, message_key=None):
+    def add_param_validator(self, name, value=None, message_key=None):
         "Add a validator that takes a single param"
         if message_key is None:
             message_key = name
-        value = getattr(self.field, name, None)
+        if value is None:
+            value = getattr(self.field, name, None)
         if value:
-            error_message = self.field.error_messages.get(message_key)
-            self._validators[name] = {'value': value, 'error_message': error_message}
+            self.add_error_message(message_key)
+            self._validators.append({'type': name, 'arg': value})
 
     def parse(self):
         "Hook for doing any extra parsing in sub class"
-        if self.field.required:
-            self.add_simple_validator('required')
+        pass
 
-    def _get_validators(self):
+    def to_ajax(self):
         if self._validators is None:
-            self._validators = {}
+            self._validators = []
+            if self.field.required:
+                self._error_messages['required'] = \
+                    self.field.error_messages.get('required')
             self.parse()
-        return self._validators
-    validators = property(_get_validators)
+        return {
+            'name': self.name,
+            'type': self.data_type,
+            'msgs': self._error_messages,
+            'validators': self._validators,
+            'required': self.field.required,
+        }
+
 
 # These fields require nothing specialised they will be assigned AjaxField by
 # default in the factory method:
-#   BooleanField, ChoiceField, TypedChoiceField, MultipleChoiceField
+#   BooleanField, NullBooleanField, ChoiceField, MultipleChoiceField,
+#   TypedChoiceField
 #
-# File fields have limited capability for validation on the client side and will
-# be treated the same as the above fields, these include:
+# File fields have limited capability for validation on the client side and
+# will be treated the same as the above fields, these include:
 #   FileField, FilePathField, ImageField
 
-# Text fields
 
 class AjaxCharField(AjaxField):
+
+    data_type = 'string'
+
     def parse(self):
         super(AjaxCharField, self).parse()
         self.add_param_validator('max_length')
         self.add_param_validator('min_length')
+
 register(forms.CharField, AjaxCharField)
 
-class AjaxEmailField(AjaxCharField):
-    def parse(self):
-        super(AjaxEmailField, self).parse()
-        self.add_simple_validator('is_email', message_key='invalid')
-register(forms.EmailField, AjaxEmailField)
 
 class AjaxRegexField(AjaxCharField):
-     def parse(self):
+
+    def parse(self):
         super(AjaxRegexField, self).parse()
-        # TODO: Pass defined regex to client
+        self.add_param_validator('regex', self.field.regex.pattern, 'invalid')
+
 register(forms.RegexField, AjaxRegexField)
-
-class AjaxURLField(AjaxCharField):
-     def parse(self):
-        super(AjaxURLField, self).parse()
-        self.add_simple_validator('is_url', message_key='invalid')
-register(forms.URLField, AjaxURLField)
+register(forms.URLField, AjaxRegexField)
+register(forms.IPAddressField, AjaxRegexField)
 
 
-# Numberic fields
+class AjaxEmailField(AjaxCharField):
+
+    def parse(self):
+        super(AjaxEmailField, self).parse()
+        self.add_simple_validator('email', 'invalid')
+
+register(forms.EmailField, AjaxEmailField)
+
 
 class AjaxNumericField(AjaxField):
+
+    data_type = 'number'
+
     def parse(self):
         super(AjaxNumericField, self).parse()
+        self.add_error_message('invalid')
         self.add_param_validator('max_value')
         self.add_param_validator('min_value')
 
-class AjaxFloatField(AjaxNumericField):
-    def parse(self):
-        super(AjaxFloatField, self).parse()
-        self.add_simple_validator('is_float', message_key='invalid')
-register(forms.FloatField, AjaxFloatField)
+register(forms.FloatField, AjaxNumericField)
 
-class AjaxDecimalField(AjaxFloatField):
+
+class AjaxDecimalField(AjaxNumericField):
+
     def parse(self):
         super(AjaxDecimalField, self).parse()
         self.add_param_validator('max_digits')
         self.add_param_validator('decimal_places')
+
 register(forms.DecimalField, AjaxDecimalField)
 
+
 class AjaxIntegerField(AjaxNumericField):
-    def parse(self):
-        super(AjaxIntegerField, self).parse()
-        self.add_simple_validator('is_int', message_key='invalid')
+
+    data_type = 'int'
+
 register(forms.IntegerField, AjaxIntegerField)
 
 
-# Date time fields
-
 class AjaxDateField(AjaxField):
+
     def parse(self):
         super(AjaxDateField, self).parse()
         # Todo: Parse input_formats
+
 register(forms.DateField, AjaxDateField)
 
+
 class AjaxDateTimeField(AjaxField):
+
     def parse(self):
         super(AjaxDateTimeField, self).parse()
         # Todo: Parse input_formats
+
 register(forms.DateTimeField, AjaxDateTimeField)
 
+
 class AjaxTimeField(AjaxField):
+
     def parse(self):
         super(AjaxTimeField, self).parse()
         # Todo: Parse input_formats
+
 register(forms.TimeField, AjaxTimeField)
-
-
-# Special cases
-
-class AjaxIPAddressField(AjaxField):
-    def parse(self):
-        super(AjaxIPAddressField, self).parse()
-        self.add_simple_validator('is_ipaddress', message_key='invalid')
-register(forms.IPAddressField, AjaxIPAddressField)
-
-class AjaxNullBooleanField(AjaxField):
-    def parse(self):
-        # Required is NEVER checked for this field so prevent it being added
-        pass
-register(forms.NullBooleanField, AjaxNullBooleanField)
