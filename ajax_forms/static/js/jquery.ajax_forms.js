@@ -26,7 +26,6 @@
                         } catch (e) {
                             // Make sure error was thrown by validation.
                             if (e.name && e.name == 'ValidationError') {
-                                alert(e.message);
                                 field_valid = false;
                             }
                         }
@@ -72,14 +71,14 @@
             var form = $(this);
 
             // Setup fields
-            $.each(fields, function() {
-                var field = form.find(':input[name='+this.name+']');
+            for (name in fields) {
+                var field = form.find(':input[name='+name+']');
                 if (field) {
                     $(field)
-                        .data('validation', this)
+                        .data('validation', fields[name])
                         .blur(validate_field_onblur);
                 }
-            });
+            }
 
             // Setup form events
             form.submit(validate_form_onsubmit);
@@ -128,6 +127,7 @@
         err.name = "ValidationError";
         return err;
     }
+    var ValidationError = $.fn.validation.ValidationError;
 
     /* Validation methods, additional functions can be added to preform
      * custom validation eg:
@@ -141,7 +141,7 @@
 
         'min_length': function(arg, value, raw_value, msgs) {
             if (raw_value.length < arg) {
-                throw new $.fn.validation.ValidationError(msgs['min_length'], {
+                throw new ValidationError(msgs['min_length'], {
                     '%(min)d': arg,
                     '%(length)d': raw_value.length
                 });
@@ -150,7 +150,7 @@
 
         'max_length': function(arg, value, raw_value, msgs) {
             if (raw_value.length > arg) {
-                throw new $.fn.validation.ValidationError(msgs['max_length'], {
+                throw new ValidationError(msgs['max_length'], {
                     '%(max)d': arg,
                     '%(length)d': raw_value.length
                 });
@@ -159,7 +159,7 @@
 
         'min_value': function(arg, value, raw_value, msgs) {
             if (value < arg) {
-                throw new $.fn.validation.ValidationError(msgs['min_value'], {
+                throw new ValidationError(msgs['min_value'], {
                     '%s': arg
                 });
             }
@@ -167,13 +167,21 @@
 
         'max_value': function(arg, value, raw_value, msgs) {
             if (value > arg) {
-                throw new $.fn.validation.ValidationError(msgs['max_value'], {
+                throw new ValidationError(msgs['max_value'], {
                     '%s': arg
                 });
             }
         },
 
         'regex': function(arg, value, raw_value, msgs) {
+        },
+
+        'equal_to_field': function(arg, value, raw_value, msgs) {
+            /* HACK: Assumes only one field in this document has passed in name */
+            var other = $(':input[name='+arg+']').val();
+            if (other != value) {
+                throw new ValidationError(msgs['equal_to_field']);
+            }
         }
 
     };

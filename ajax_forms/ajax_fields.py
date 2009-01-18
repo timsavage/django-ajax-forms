@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext as _
 
 
@@ -19,10 +20,10 @@ def register(field, ajax_field):
     registry[field] = ajax_field
 
 
-def factory(field_instance, name):
+def factory(field_instance):
     "Get a ajax_field instance for a feild instance"
     ajax_field = registry.get(type(field_instance), AjaxField)
-    return ajax_field(field_instance, name)
+    return ajax_field(field_instance)
 
 
 class AjaxField(object):
@@ -30,9 +31,8 @@ class AjaxField(object):
 
     data_type = "String"
 
-    def __init__(self, field_instance, name):
+    def __init__(self, field_instance):
         self.field = field_instance
-        self.name = name
         self._rules = None
         self._error_messages = {}
 
@@ -41,22 +41,22 @@ class AjaxField(object):
         self._error_messages[message_key] = \
             self.field.error_messages.get(message_key)
 
-    def add_simple_rule(self, name, message_key=None):
+    def add_simple_rule(self, rule_name, message_key=None):
         "Add a simple validator that just validates an item meets a format."
         if message_key is None:
-            message_key = name
+            message_key = rule_name
         self.add_error_message(message_key)
-        self._rules[name] = None
+        self._rules[rule_name] = None
 
-    def add_param_rule(self, name, value=None, message_key=None):
+    def add_param_rule(self, rule_name, value=None, message_key=None):
         "Add a validator that takes a single param"
         if message_key is None:
-            message_key = name
+            message_key = rule_name
         if value is None:
-            value = getattr(self.field, name, None)
+            value = getattr(self.field, rule_name, None)
         if value:
             self.add_error_message(message_key)
-            self._rules[name] = value
+            self._rules[rule_name] = value
 
     def parse(self):
         "Hook for doing any extra parsing in sub class"
@@ -64,13 +64,12 @@ class AjaxField(object):
 
     def to_ajax(self):
         if self._rules is None:
-            self._rules = {}
+            self._rules = SortedDict()
             if self.field.required:
                 self._error_messages['required'] = \
                     self.field.error_messages.get('required')
             self.parse()
         return {
-            'name': self.name,
             'type': self.data_type,
             'msgs': self._error_messages,
             'rules': self._rules,
