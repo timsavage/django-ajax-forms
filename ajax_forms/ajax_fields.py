@@ -33,7 +33,7 @@ class AjaxField(object):
     def __init__(self, field_instance, name):
         self.field = field_instance
         self.name = name
-        self._validators = None
+        self._rules = None
         self._error_messages = {}
 
     def add_error_message(self, message_key):
@@ -41,14 +41,14 @@ class AjaxField(object):
         self._error_messages[message_key] = \
             self.field.error_messages.get(message_key)
 
-    def add_simple_validator(self, name, message_key=None):
+    def add_simple_rule(self, name, message_key=None):
         "Add a simple validator that just validates an item meets a format."
         if message_key is None:
             message_key = name
         self.add_error_message(message_key)
-        self._validators.append({'type': name, 'arg': None})
+        self._rules[name] = None
 
-    def add_param_validator(self, name, value=None, message_key=None):
+    def add_param_rule(self, name, value=None, message_key=None):
         "Add a validator that takes a single param"
         if message_key is None:
             message_key = name
@@ -56,15 +56,15 @@ class AjaxField(object):
             value = getattr(self.field, name, None)
         if value:
             self.add_error_message(message_key)
-            self._validators.append({'type': name, 'arg': value})
+            self._rules[name] = value
 
     def parse(self):
         "Hook for doing any extra parsing in sub class"
         pass
 
     def to_ajax(self):
-        if self._validators is None:
-            self._validators = []
+        if self._rules is None:
+            self._rules = {}
             if self.field.required:
                 self._error_messages['required'] = \
                     self.field.error_messages.get('required')
@@ -73,7 +73,7 @@ class AjaxField(object):
             'name': self.name,
             'type': self.data_type,
             'msgs': self._error_messages,
-            'validators': self._validators,
+            'rules': self._rules,
             'required': self.field.required,
         }
 
@@ -94,8 +94,8 @@ class AjaxCharField(AjaxField):
 
     def parse(self):
         super(AjaxCharField, self).parse()
-        self.add_param_validator('max_length')
-        self.add_param_validator('min_length')
+        self.add_param_rule('max_length')
+        self.add_param_rule('min_length')
 
 register(forms.CharField, AjaxCharField)
 
@@ -104,7 +104,7 @@ class AjaxRegexField(AjaxCharField):
 
     def parse(self):
         super(AjaxRegexField, self).parse()
-        self.add_param_validator('regex', self.field.regex.pattern, 'invalid')
+        self.add_param_rule('regex', self.field.regex.pattern, 'invalid')
 
 register(forms.RegexField, AjaxRegexField)
 register(forms.URLField, AjaxRegexField)
@@ -115,7 +115,7 @@ class AjaxEmailField(AjaxCharField):
 
     def parse(self):
         super(AjaxEmailField, self).parse()
-        self.add_simple_validator('email', 'invalid')
+        self.add_simple_rule('email', 'invalid')
 
 register(forms.EmailField, AjaxEmailField)
 
@@ -127,8 +127,8 @@ class AjaxNumericField(AjaxField):
     def parse(self):
         super(AjaxNumericField, self).parse()
         self.add_error_message('invalid')
-        self.add_param_validator('max_value')
-        self.add_param_validator('min_value')
+        self.add_param_rule('max_value')
+        self.add_param_rule('min_value')
 
 register(forms.FloatField, AjaxNumericField)
 
@@ -137,8 +137,8 @@ class AjaxDecimalField(AjaxNumericField):
 
     def parse(self):
         super(AjaxDecimalField, self).parse()
-        self.add_param_validator('max_digits')
-        self.add_param_validator('decimal_places')
+        self.add_param_rule('max_digits')
+        self.add_param_rule('decimal_places')
 
 register(forms.DecimalField, AjaxDecimalField)
 

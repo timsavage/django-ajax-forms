@@ -18,11 +18,11 @@
             } else {
                 // TODO: Datatype check
 
-                $.each(validation.validators, function () {
-                    validator = $.fn.validation.validators[this.type]
-                    if (validator) {
+                for (type in validation.rules) {
+                    rule_func = $.fn.validation.rules[type]
+                    if (rule_func) {
                         try {
-                            validator(this.arg, raw_value, raw_value, validation.msgs);
+                            rule_func(validation.rules[type], raw_value, raw_value, validation.msgs);
                         } catch (e) {
                             // Make sure error was thrown by validation.
                             if (e.name && e.name == 'ValidationError') {
@@ -31,7 +31,7 @@
                             }
                         }
                     }
-                });
+                }
             }
 
             if (field_valid) {
@@ -131,13 +131,13 @@
 
     /* Validation methods, additional functions can be added to preform
      * custom validation eg:
-     * $.fn.validation.validators['foo'] = function(arg, value, raw_value, msgs) {
+     * $.fn.validation.rules['foo'] = function(arg, value, raw_value, msgs) {
      *     if (validation fail) {
      *         throw new ValidationError(msgs['msg_code']);
      *     }
      * };
      */
-    $.fn.validation.validators = {
+    $.fn.validation.rules = {
 
         'min_length': function(arg, value, raw_value, msgs) {
             if (raw_value.length < arg) {
