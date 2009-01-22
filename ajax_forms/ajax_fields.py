@@ -29,33 +29,23 @@ def factory(field_instance):
 class AjaxField(object):
     "Base field mask"
 
-    data_type = "String"
-
     def __init__(self, field_instance):
         self.field = field_instance
         self._rules = None
         self._error_messages = {}
 
-    def add_error_message(self, message_key):
+    def add_error_message(self, msg_key):
         "Add an error message to be sent to client"
-        self._error_messages[message_key] = \
-            self.field.error_messages.get(message_key)
+        self._error_messages[msg_key] = self.field.error_messages.get(msg_key)
 
-    def add_simple_rule(self, rule_name, message_key=None):
-        "Add a simple validator that just validates an item meets a format."
-        if message_key is None:
-            message_key = rule_name
-        self.add_error_message(message_key)
-        self._rules[rule_name] = None
-
-    def add_param_rule(self, rule_name, value=None, message_key=None):
+    def add_rule(self, rule_name, value=None, msg_key=None):
         "Add a validator that takes a single param"
-        if message_key is None:
-            message_key = rule_name
+        if msg_key is None:
+            msg_key = rule_name
         if value is None:
             value = getattr(self.field, rule_name, None)
         if value:
-            self.add_error_message(message_key)
+            self.add_error_message(msg_key)
             self._rules[rule_name] = value
 
     def parse(self):
@@ -66,14 +56,12 @@ class AjaxField(object):
         if self._rules is None:
             self._rules = SortedDict()
             if self.field.required:
-                self._error_messages['required'] = \
-                    self.field.error_messages.get('required')
+                self.add_error_message('required')
             self.parse()
         return {
-            'type': self.data_type,
             'msgs': self._error_messages,
-            'rules': self._rules,
             'required': self.field.required,
+            'rules': self._rules,
         }
 
 
@@ -89,12 +77,10 @@ class AjaxField(object):
 
 class AjaxCharField(AjaxField):
 
-    data_type = 'string'
-
     def parse(self):
         super(AjaxCharField, self).parse()
-        self.add_param_rule('max_length')
-        self.add_param_rule('min_length')
+        self.add_rule('max_length')
+        self.add_rule('min_length')
 
 register(forms.CharField, AjaxCharField)
 
@@ -103,31 +89,20 @@ class AjaxRegexField(AjaxCharField):
 
     def parse(self):
         super(AjaxRegexField, self).parse()
-        self.add_param_rule('regex', self.field.regex.pattern, 'invalid')
+        self.add_rule('regex', self.field.regex.pattern, 'invalid')
 
 register(forms.RegexField, AjaxRegexField)
 register(forms.URLField, AjaxRegexField)
 register(forms.IPAddressField, AjaxRegexField)
-
-
-class AjaxEmailField(AjaxCharField):
-
-    def parse(self):
-        super(AjaxEmailField, self).parse()
-        self.add_simple_rule('email', 'invalid')
-
-register(forms.EmailField, AjaxEmailField)
+register(forms.EmailField, AjaxRegexField)
 
 
 class AjaxNumericField(AjaxField):
 
-    data_type = 'number'
-
     def parse(self):
         super(AjaxNumericField, self).parse()
-        self.add_error_message('invalid')
-        self.add_param_rule('max_value')
-        self.add_param_rule('min_value')
+        self.add_rule('max_value')
+        self.add_rule('min_value')
 
 register(forms.FloatField, AjaxNumericField)
 
@@ -135,16 +110,18 @@ register(forms.FloatField, AjaxNumericField)
 class AjaxDecimalField(AjaxNumericField):
 
     def parse(self):
+        self.add_rule('is_decimal', True, 'invalid')
         super(AjaxDecimalField, self).parse()
-        self.add_param_rule('max_digits')
-        self.add_param_rule('decimal_places')
+        self.add_rule('max_digits')
+        self.add_rule('decimal_places')
 
 register(forms.DecimalField, AjaxDecimalField)
 
 
 class AjaxIntegerField(AjaxNumericField):
-
-    data_type = 'int'
+    def parse(self):
+        self.add_rule('is_integer', True, 'invalid')
+        super(AjaxIntegerField, self).parse()
 
 register(forms.IntegerField, AjaxIntegerField)
 

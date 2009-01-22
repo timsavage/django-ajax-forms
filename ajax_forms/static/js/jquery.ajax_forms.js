@@ -11,26 +11,25 @@
 
             var field_valid = true;
             var validation = field.data('validation');
-            var raw_value = $(field).val();
+            var value = $(field).val();
 
-            if (validation.required && raw_value.length == 0) {
-                field_valid = false;
-            } else {
-                // TODO: Datatype check
-
+            if (value.length > 0) {
                 for (type in validation.rules) {
                     rule_func = $.fn.validation.rules[type]
                     if (rule_func) {
                         try {
-                            rule_func(validation.rules[type], raw_value, raw_value, validation.msgs);
+                            rule_func(validation.rules[type], value, validation.msgs);
                         } catch (e) {
                             // Make sure error was thrown by validation.
                             if (e.name && e.name == 'ValidationError') {
                                 field_valid = false;
+                                field.attr('title', e.message);
                             }
                         }
                     }
                 }
+            } else {
+                field_valid = !validation.required;
             }
 
             if (field_valid) {
@@ -76,7 +75,8 @@
                 if (field) {
                     $(field)
                         .data('validation', fields[name])
-                        .blur(validate_field_onblur);
+                        .blur(validate_field_onblur)
+                        .keyup(validate_field_onblur);
                 }
             }
 
@@ -139,33 +139,29 @@
      */
     $.fn.validation.rules = {
 
-        'min_length': function(arg, value, raw_value, msgs) {
-            if (raw_value.length < arg) {
-                throw new ValidationError(msgs['min_length'], {
-                    '%(min)d': arg,
-                    '%(length)d': raw_value.length
-                });
-            }
-        },
-
-        'max_length': function(arg, value, raw_value, msgs) {
-            if (raw_value.length > arg) {
+        'max_length': function(arg, value, msgs) {
+            if (value.length > arg) {
                 throw new ValidationError(msgs['max_length'], {
                     '%(max)d': arg,
-                    '%(length)d': raw_value.length
+                    '%(length)d': value.length
                 });
             }
         },
 
-        'min_value': function(arg, value, raw_value, msgs) {
-            if (value < arg) {
-                throw new ValidationError(msgs['min_value'], {
-                    '%s': arg
+        'min_length': function(arg, value, msgs) {
+            if (value.length < arg) {
+                throw new ValidationError(msgs['min_length'], {
+                    '%(min)d': arg,
+                    '%(length)d': value.length
                 });
             }
         },
 
-        'max_value': function(arg, value, raw_value, msgs) {
+        'is_integer': function(arg, value, msgs) {
+        },
+
+        'max_value': function(arg, value, msgs) {
+            var value = Number(value);
             if (value > arg) {
                 throw new ValidationError(msgs['max_value'], {
                     '%s': arg
@@ -173,10 +169,24 @@
             }
         },
 
-        'regex': function(arg, value, raw_value, msgs) {
+        'min_value': function(arg, value, msgs) {
+            var value = Number(value);
+            if (value < arg) {
+                throw new ValidationError(msgs['min_value'], {
+                    '%s': arg
+                });
+            }
         },
 
-        'equal_to_field': function(arg, value, raw_value, msgs) {
+        'regex': function(arg, value, msgs) {
+            var re = RegExp();
+            re.compile(arg);
+            if (!re.test(value)) {
+                throw new ValidationError(msgs['invalid']);
+            }
+        },
+
+        'equal_to_field': function(arg, value, msgs) {
             /* HACK: Assumes only one field in this document has passed in name */
             var other = $(':input[name='+arg+']').val();
             if (other != value) {
