@@ -41,7 +41,7 @@ def form_to_json(form):
             ajax_fields[name] = ajax_field.to_ajax()
 
     # Add ajax callbacks
-    for name, callback in getattr(ajax_directives, 'callbacks', []):
+    for callback in getattr(ajax_directives, 'callbacks', []):
         pass
 
     # Add additional rules

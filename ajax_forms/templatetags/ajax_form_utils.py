@@ -8,6 +8,7 @@ register = template.Library()
 class RenderAjaxFieldsNode(template.Node):
 
     def __init__(self, form):
+        super(RenderAjaxFieldsNode, self).__init__()
         self.form = template.Variable(form)
 
     def render(self, context):

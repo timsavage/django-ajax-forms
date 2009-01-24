@@ -1,0 +1,14 @@
+{% extends "foo/base.html" %}
+
+{% block head_title %}Example Forms{% endblock %}
+
+{% block body %}
+    <h2>Example Forms</h2>
+
+    <ul>
+        <li><a href="{% url example1 %}">Example 1</a> - Form with all basic field types.</li>
+        <li><a href="{% url example2 %}">Example 2</a> - Form with extended "Meta" options.</li>
+        <li><a href="{% url example3 %}">Example 3</a> - Form with AJAX callback.</li>
+        <li><a href="{% url example4 %}">Example 4</a> - Form with custom fields.</li>
+    </ul>
+{% endblock %}

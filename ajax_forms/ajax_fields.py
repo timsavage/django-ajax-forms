@@ -92,9 +92,25 @@ class AjaxRegexField(AjaxCharField):
         self.add_rule('regex', self.field.regex.pattern, 'invalid')
 
 register(forms.RegexField, AjaxRegexField)
-register(forms.URLField, AjaxRegexField)
 register(forms.IPAddressField, AjaxRegexField)
-register(forms.EmailField, AjaxRegexField)
+
+
+class AjaxEmailField(AjaxCharField):
+
+    def parse(self):
+        super(AjaxEmailField, self).parse()
+        self.add_rule('is_email', True, 'invalid')
+
+register(forms.EmailField, AjaxEmailField)
+
+
+class AjaxURLField(AjaxCharField):
+
+    def parse(self):
+        super(AjaxURLField, self).parse()
+        self.add_rule('is_url', True, 'invalid')
+
+register(forms.URLField, AjaxURLField)
 
 
 class AjaxNumericField(AjaxField):
@@ -104,13 +120,19 @@ class AjaxNumericField(AjaxField):
         self.add_rule('max_value')
         self.add_rule('min_value')
 
-register(forms.FloatField, AjaxNumericField)
 
-
-class AjaxDecimalField(AjaxNumericField):
+class AjaxFloatField(AjaxNumericField):
 
     def parse(self):
-        self.add_rule('is_decimal', True, 'invalid')
+        self.add_rule('is_float', True, 'invalid')
+        super(AjaxFloatField, self).parse()
+
+register(forms.FloatField, AjaxFloatField)
+
+
+class AjaxDecimalField(AjaxFloatField):
+
+    def parse(self):
         super(AjaxDecimalField, self).parse()
         self.add_rule('max_digits')
         self.add_rule('decimal_places')
