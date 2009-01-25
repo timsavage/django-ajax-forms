@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext as _
@@ -89,28 +91,16 @@ class AjaxRegexField(AjaxCharField):
 
     def parse(self):
         super(AjaxRegexField, self).parse()
-        self.add_rule('regex', self.field.regex.pattern, 'invalid')
+        # Handle regex flags
+        flags = []
+        if self.field.regex.flags == re.IGNORECASE:
+            flags.append('i')
+        self.add_rule('regex', (self.field.regex.pattern, ''.join(flags)), 'invalid')
 
 register(forms.RegexField, AjaxRegexField)
 register(forms.IPAddressField, AjaxRegexField)
-
-
-class AjaxEmailField(AjaxCharField):
-
-    def parse(self):
-        super(AjaxEmailField, self).parse()
-        self.add_rule('is_email', True, 'invalid')
-
-register(forms.EmailField, AjaxEmailField)
-
-
-class AjaxURLField(AjaxCharField):
-
-    def parse(self):
-        super(AjaxURLField, self).parse()
-        self.add_rule('is_url', True, 'invalid')
-
-register(forms.URLField, AjaxURLField)
+register(forms.URLField, AjaxRegexField)
+register(forms.EmailField, AjaxRegexField)
 
 
 class AjaxNumericField(AjaxField):

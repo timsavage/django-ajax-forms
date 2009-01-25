@@ -18,6 +18,7 @@
         // Setup options
         var opts = $.extend({}, $.fn.validation.defaults, options);
 
+        // Validate a single field
         function validate_field(field) {
             var parent = opts.callbacks.get_parent_element(field, opts.format);
             var field_valid = true;
@@ -73,10 +74,11 @@
             return field_valid;
         }
 
+        // Validate all fields in a form
         function validate_all(form) {
             var first_fail = null;
 
-            for (name in fields) {
+            for (var name in fields) {
                 var field = form.find(':input[name='+name+']');
                 if (field) {
                     if (!validate_field(field)) {
@@ -97,7 +99,7 @@
             var form = $(this);
 
             // Setup fields
-            for (name in fields) {
+            for (var name in fields) {
                 var field = form.find(':input[name='+name+']');
                 if (field) {
                     field.data('validation', fields[name]);
@@ -121,7 +123,7 @@
     // Default settings
     $.fn.validation.defaults = {
         // Type of form layout to interact with;
-        // p | ul | table
+        // p | ul | table | dl
         format: 'table',
 
         // Classes applied in various states
@@ -139,12 +141,14 @@
             // Get the parent of a particular field element (mainly to handle
             // the case of tables)
             get_parent_element: function(field, format) {
-                switch(format) {
-                    case 'table':
-                        return field.parent().parent();
-                    default:
-                        return field.parent();
+                if (!field._parent) {
+                    if (format == 'table') {
+                        field._parent = field.parent().parent();
+                    } else {
+                        field._parent = field.parent();
+                    }
                 }
+                return field._parent;
             },
 
             // Show error message
@@ -173,9 +177,14 @@
     var ValidationError = $.fn.validation.ValidationError;
 
 
+    // Regular expressions
+    var IS_FLOAT = /^-?[0-9]*(\.?[0-9]*)$/;
+    var IS_INTEGER = /^-?[0-9]+$/;
+
+
     /* Validation methods, additional functions can be added to preform
      * custom validation eg:
-     * $.fn.validation.rules['foo'] = function(arg, value, raw_value, msgs) {
+     * $.fn.validation.rules['foo'] = function(arg, value, msgs) {
      *     if (validation fail) {
      *         throw new ValidationError(msgs['msg_code']);
      *     }
@@ -202,34 +211,16 @@
         },
 
         'is_float': function(arg, value, msgs) {
-            var re = /^-?[0-9]*(\.?[0-9]*)$/;
             value = $.trim(value);
-            if (!re.test(value) || isNaN(parseFloat(value))) {
+            if (!IS_FLOAT.test(value) || isNaN(parseFloat(value))) {
                 throw new ValidationError(msgs['invalid']);
             }
         },
 
         'is_integer': function(arg, value, msgs) {
-            var re = /^-?[0-9]+$/;
             value = $.trim(value);
-            if (!re.test(value) || isNaN(parseInt(value))) {
+            if (!IS_INTEGER.test(value) || isNaN(parseInt(value))) {
                 throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_email': function(arg, value, msgs) {
-            // TODO: Port django regex to JavaScript
-            var re = /^.+@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$/;
-            if (!re.test(value)) {
-                //throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_url': function(arg, value, msgs) {
-            // TODO: Port django regex to JavaScript
-            var re = /^.+@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$/;
-            if (!re.test(value)) {
-                //throw new ValidationError(msgs['invalid']);
             }
         },
 
@@ -272,8 +263,7 @@
         },
 
         'regex': function(arg, value, msgs) {
-            var re = RegExp();
-            re.compile(arg);
+            var re = RegExp(arg[0], arg[1]);
             if (!re.test(value)) {
                 throw new ValidationError(msgs['invalid']);
             }
