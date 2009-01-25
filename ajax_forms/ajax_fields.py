@@ -93,8 +93,10 @@ class AjaxRegexField(AjaxCharField):
         super(AjaxRegexField, self).parse()
         # Handle regex flags
         flags = []
-        if self.field.regex.flags == re.IGNORECASE:
+        if self.field.regex.flags & re.IGNORECASE:
             flags.append('i')
+        if self.field.regex.flags & re.MULTILINE:
+            flags.append('m')
         self.add_rule('regex', (self.field.regex.pattern, ''.join(flags)), 'invalid')
 
 register(forms.RegexField, AjaxRegexField)

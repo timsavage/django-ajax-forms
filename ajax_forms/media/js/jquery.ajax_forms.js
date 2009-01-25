@@ -20,7 +20,7 @@
 
         // Validate a single field
         function validate_field(field) {
-            var parent = opts.callbacks.get_parent_element(field, opts.format);
+            var parent = opts.callbacks.get_parent_element(field, opts.layout);
             var field_valid = true;
             var validation = field.data('validation');
             var value = field.val();
@@ -54,14 +54,15 @@
                 }
 
                 // Clear existing error
-                opts.callbacks.clear_error(field, opts.format);
+                opts.callbacks.clear_error(field, opts.layout);
             } catch (e) {
                 // Make sure error was thrown by validation.
                 if (e.name && e.name == 'ValidationError') {
                     field_valid = false;
-                    opts.callbacks.show_error(field, e.message, opts.format);
+                    opts.callbacks.show_error(field, e.message, opts.layout);
                 } else {
                     log(e.message);
+                    throw e;
                 }
             }
 
@@ -124,7 +125,10 @@
     $.fn.validation.defaults = {
         // Type of form layout to interact with;
         // p | ul | table | dl
-        format: 'table',
+        layout: 'table',
+
+        // Events on which to perform validation
+        validation_events: ['blur', 'keyup'],
 
         // Classes applied in various states
         style: {
@@ -133,16 +137,13 @@
             processing: 'processing'
         },
 
-        // Events on which to perform validation
-        validation_events: ['blur', 'keyup'],
-
         // Callback methods
         callbacks: {
             // Get the parent of a particular field element (mainly to handle
             // the case of tables)
-            get_parent_element: function(field, format) {
+            get_parent_element: function(field, layout) {
                 if (!field._parent) {
-                    if (format == 'table') {
+                    if (layout == 'table') {
                         field._parent = field.parent().parent();
                     } else {
                         field._parent = field.parent();
@@ -152,12 +153,12 @@
             },
 
             // Show error message
-            show_error: function(field, msg, format) {
+            show_error: function(field, msg, layout) {
                 field.attr('title', msg);
             },
 
             // Clear existing error message
-            clear_error: function(field, format) {
+            clear_error: function(field, layout) {
                 field.attr('title', '');
             }
         }
