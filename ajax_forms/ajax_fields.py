@@ -126,8 +126,17 @@ class AjaxDecimalField(AjaxFloatField):
 
     def parse(self):
         super(AjaxDecimalField, self).parse()
-        self.add_rule('max_digits')
-        self.add_rule('decimal_places')
+
+        max_digits = getattr(self.field, 'max_digits', None),
+        decimal_places = getattr(self.field, 'decimal_places', None)
+        self._rules['decimal_lengths'] = (max_digits, decimal_places)
+
+        if max_digits:
+            self.add_error_message('max_digits')
+        if decimal_places:
+            self.add_error_message('max_decimal_places')
+        if max_digits and decimal_places:
+            self.add_error_message('max_whole_digits')
 
 register(forms.DecimalField, AjaxDecimalField)
 
