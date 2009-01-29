@@ -8,7 +8,7 @@
 
     <form method="post">
         <table>
-            {{ form.as_table }}
+            {{ form.as_ul }}
             <tr><td></td><td><input type="submit" /></td></tr>
         </table>
     </form>
@@ -19,7 +19,9 @@
 <script type="text/javascript">
     $(function() {
         $('#id_boolean').focus();
-        $('form').validation({% render_ajax_fields form %});
+        $('form').validation({% render_ajax_fields form %}, {
+            layout: 'ul'
+        });
     });
 </script>
 {% endblock %}

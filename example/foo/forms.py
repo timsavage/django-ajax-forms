@@ -16,7 +16,8 @@ class Example1(forms.Form):
     typedchoicefield = forms.TypedChoiceField(label='TypedChoiceField', choices=CHOICES, empty_value=0, coerce=int)
     datefield = forms.DateField(label='DateField')
     datetimefield = forms.DateTimeField(label='DateTimeField')
-    decimalfield = forms.DecimalField(label='DecimalField', max_value=2291.3321, min_value=432.3244, max_digits=9, decimal_places=4)
+    #decimalfield = forms.DecimalField(label='DecimalField', max_value=2291.3321, min_value=432.3244, max_digits=9, decimal_places=4)
+    decimalfield = forms.DecimalField(label='DecimalField', min_value=432.3244, max_digits=9, decimal_places=4)
     emailfield = forms.EmailField(label='EmailField')
     #filefield = forms.FileField(label='FileField')
     floatfield = forms.FloatField(label='FloatField', max_value=23.6, min_value=-5.32)
@@ -35,7 +36,7 @@ class Example2(forms.Form):
     old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput(render_value=False))
     password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(render_value=False),
         help_text = "at least 6 characters (case sensitive)")
-    password2 = forms.CharField(label='New Password (again)', widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(label='New Password (again)', required=False, widget=forms.PasswordInput(render_value=False))
 
     class Ajax:
         rules = [
@@ -54,16 +55,23 @@ class Example3(forms.Form):
     email = forms.EmailField(label="E-mail", widget=forms.TextInput())
     password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(render_value=False),
         help_text = "at least 6 characters (case sensitive)")
-    password2 = forms.CharField(label='New Password (again)', widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(label='New Password (again)', required=False, widget=forms.PasswordInput(render_value=False))
 
     class Ajax:
-        callbacks = ['username', 'email'] # Still in development
+        callback_url = 'ajax_example3'
+        callback_fields = ['username', 'email']
         rules = [
             ('password2', {'equal_to_field': 'password1'})
         ]
         messages = [
             ('password2', {'equal_to_field': "Password fields didn't match."})
         ]
+
+    def clean_username(self):
+        pass
+
+    def clean_email(self):
+        pass
 
 
 class Example4(forms.Form):

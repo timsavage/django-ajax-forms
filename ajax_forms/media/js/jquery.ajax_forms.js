@@ -1,9 +1,11 @@
-/*! Copyright (c) 2009 Tim Savage
+/*! Copyright 2009 Tim Savage <tim.savage@jooceylabs.com>
+ * Licensed under the BSD license (http://www.opensource.org/licenses/bsd-license.php)
  *
  * Version: 0.2
  * Requires jQuery 1.2.6+
  * Docs: http://code.google.com/p/django-ajax-forms/
  */
+
 (function($) {
 
     // Console helper
@@ -86,6 +88,8 @@
             }
         }
 
+        log('Validate: ' + value);
+
         parent.removeClass(opts.style.valid);
         parent.removeClass(opts.style.invalid);
         parent.addClass(opts.style.processing);
@@ -136,7 +140,7 @@
         layout: 'table',
 
         // Events on which to perform validation
-        validation_events: ['blur', 'keyup'],
+        validation_events: ['blur'],
 
         // Classes applied in various states
         style: {
@@ -162,12 +166,28 @@
 
             // Show error message
             show_error: function(field, msg, layout) {
-                field.attr('title', msg);
+                var errors = field.siblings('ul');
+                if (errors.length) {
+                    errors.empty();
+                } else {
+                    errors = $('<ul>')
+                        .addClass('errorlist')
+                        .hide();
+                    if (layout == 'table') {
+                        errors.insertBefore(field);
+                    } else {
+                        field.parent().prepend(errors);
+                    }
+                }
+                $('<li>')
+                    .text(msg)
+                    .appendTo(errors);
+                errors.fadeIn();
             },
 
             // Clear existing error message
             clear_error: function(field, layout) {
-                field.attr('title', '');
+                field.siblings('ul').fadeOut(function() { $(this).remove(); });
             }
         }
     };

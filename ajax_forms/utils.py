@@ -1,4 +1,8 @@
+# Copyright 2009 Tim Savage <tim.savage@jooceylabs.com>
+# See LICENSE for licence information
+
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.urlresolvers import reverse
 from django.forms import Form
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
@@ -6,10 +10,6 @@ from django.utils.functional import Promise
 from django.utils.translation import ugettext as _
 
 from ajax_forms.ajax_fields import factory as field_factory
-
-__all__ = (
-    'form_to_json', 'LazyEncoder',
-)
 
 
 class LazyEncoder(DjangoJSONEncoder):
@@ -41,21 +41,25 @@ def form_to_json(form):
             ajax_fields[name] = ajax_field.to_ajax()
 
     # Add ajax callbacks
-    for callback in getattr(ajax_directives, 'callbacks', []):
-        pass
+    #~ callback_url = getattr(ajax_directives, 'callback_url', '')
+    #~ for callback_field in getattr(ajax_directives, 'callback_fields', []):
+        #~ try:
+            #~ ajax_fields[callback_field]['callback'] = callback_url
+        #~ except KeyError:
+            #~ raise Exception(_('Field "%s" not found in this form') % name)
 
     # Add additional rules
     for name, rules in getattr(ajax_directives, 'rules', []):
         try:
             ajax_fields[name].setdefault('rules', {}).update(rules)
         except KeyError:
-            raise Exception('Field "%s" not found in this form' % name)
+            raise Exception(_('Field "%s" not found in this form') % name)
 
     # Add additional messages
     for name, messages in getattr(ajax_directives, 'messages', []):
         try:
             ajax_fields[name].setdefault('msgs', {}).update(messages)
         except KeyError:
-            raise Exception('Field "%s" not found in this form' % name)
+            raise Exception(_('Field "%s" not found in this form') % name)
 
     return json_serializer.encode(ajax_fields)
