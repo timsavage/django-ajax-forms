@@ -88,8 +88,6 @@
             }
         }
 
-        log('Validate: ' + value);
-
         parent.removeClass(opts.style.valid);
         parent.removeClass(opts.style.invalid);
         parent.addClass(opts.style.processing);
@@ -194,9 +192,10 @@
 
 
     // Regular expressions
+    var DECIMAL_LENGTHS = /^[-\s0]*(\d*).?(\d*)\s*$/;
     var IS_FLOAT = /^-?[0-9]*(\.?[0-9]*)$/;
     var IS_INTEGER = /^-?[0-9]+$/;
-    var DECIMAL_LENGTHS = /^[-\s0]*(\d*).?(\d*)\s*$/;
+    var IS_TIME = /^([0-1]\d)|(2[0-3])|\d:[0-5]?\d(:[0-5]\d)?$/;
 
     /* Validation methods, additional functions can be added to preform
      * custom validation eg:
@@ -226,39 +225,7 @@
             }
         },
 
-        'is_float': function(arg, value, msgs, form) {
-            value = $.trim(value);
-            if (!IS_FLOAT.test(value) || isNaN(parseFloat(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_integer': function(arg, value, msgs, form) {
-            value = $.trim(value);
-            if (!IS_INTEGER.test(value) || isNaN(parseInt(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'max_value': function(arg, value, msgs, form) {
-            var value = Number(value);
-            if (value > arg) {
-                throw new ValidationError(msgs['max_value'], {
-                    '%s': arg
-                });
-            }
-        },
-
-        'min_value': function(arg, value, msgs, form) {
-            var value = Number(value);
-            if (value < arg) {
-                throw new ValidationError(msgs['min_value'], {
-                    '%s': arg
-                });
-            }
-        },
-
-        'decimal_lengths': function(arg, value, msgs, form) {
+        'decimal_length': function(arg, value, msgs, form) {
             var match = DECIMAL_LENGTHS.exec(value);
             if (match) {
                 var max_digits = arg[0];
@@ -283,6 +250,59 @@
                         });
                     }
                 }
+            }
+        },
+
+        'is_float': function(arg, value, msgs, form) {
+            value = $.trim(value);
+            if (!IS_FLOAT.test(value) || isNaN(parseFloat(value))) {
+                throw new ValidationError(msgs['invalid']);
+            }
+        },
+
+        'is_integer': function(arg, value, msgs, form) {
+            value = $.trim(value);
+            if (!IS_INTEGER.test(value) || isNaN(parseInt(value))) {
+                throw new ValidationError(msgs['invalid']);
+            }
+        },
+
+        'is_date': function(arg, value, msgs, form) {
+            var re = /^(\d{4}-\d{1,2}-\d{1,2})|(\d{2}\/\d{2}\/\d{2,4})$/;
+            if (!re.test($.trim(value))) {
+                throw new ValidationError(msgs['invalid']);
+            }
+        },
+
+        'is_datetime': function(arg, value, msgs, form) {
+            /* see http://regexpal.com/ */
+            var re = /^(\d{4}-((0?\d)|(1[0-2]))-(([0-2]?\d)|(3[01])))|(((0?\d)|(1[0-2]))\/(([0-2]?\d)|(3[01]))\/\d{2}\d{2}?)$/;
+            if (!re.test($.trim(value))) {
+                throw new ValidationError(msgs['invalid']);
+            }
+        },
+
+        'is_time': function(arg, value, msgs, form) {
+            if (!IS_TIME.test($.trim(value))) {
+                throw new ValidationError(msgs['invalid']);
+            }
+        },
+
+        'max_value': function(arg, value, msgs, form) {
+            var value = Number(value);
+            if (value > arg) {
+                throw new ValidationError(msgs['max_value'], {
+                    '%s': arg
+                });
+            }
+        },
+
+        'min_value': function(arg, value, msgs, form) {
+            var value = Number(value);
+            if (value < arg) {
+                throw new ValidationError(msgs['min_value'], {
+                    '%s': arg
+                });
             }
         },
 

@@ -129,7 +129,8 @@ class AjaxDecimalField(AjaxFloatField):
 
         max_digits = getattr(self.field, 'max_digits', None),
         decimal_places = getattr(self.field, 'decimal_places', None)
-        self._rules['decimal_lengths'] = (max_digits, decimal_places)
+        if not (max_digits is None or decimal_places is None):
+            self._rules['decimal_length'] = (max_digits, decimal_places)
 
         if max_digits:
             self.add_error_message('max_digits')
@@ -153,7 +154,7 @@ class AjaxDateField(AjaxField):
 
     def parse(self):
         super(AjaxDateField, self).parse()
-        # Todo: Parse input_formats
+        self.add_rule('is_date', True, 'invalid')
 
 register(forms.DateField, AjaxDateField)
 
@@ -162,7 +163,7 @@ class AjaxDateTimeField(AjaxField):
 
     def parse(self):
         super(AjaxDateTimeField, self).parse()
-        # Todo: Parse input_formats
+        self.add_rule('is_datetime', True, 'invalid')
 
 register(forms.DateTimeField, AjaxDateTimeField)
 
@@ -171,6 +172,6 @@ class AjaxTimeField(AjaxField):
 
     def parse(self):
         super(AjaxTimeField, self).parse()
-        # Todo: Parse input_formats
+        self.add_rule('is_time', True, 'invalid')
 
 register(forms.TimeField, AjaxTimeField)
