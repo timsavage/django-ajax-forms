@@ -7,10 +7,10 @@
     <p>Form with all basic field types.</p>
 
     <form method="post">
-        <table>
-            {{ form.as_ul }}
-            <tr><td></td><td><input type="submit" /></td></tr>
-        </table>
+        <dl>
+            {% include "foo/form_dl.html" %}
+            <dd><input type="submit" /></dd>
+        </dl>
     </form>
 {% endblock %}
 
@@ -20,7 +20,8 @@
     $(function() {
         $('#id_boolean').focus();
         $('form').validation({% render_ajax_fields form %}, {
-            layout: 'ul'
+            layout: 'dl',
+            validation_events: ['blur', 'keyup']
         });
     });
 </script>

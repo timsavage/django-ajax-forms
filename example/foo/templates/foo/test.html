@@ -1,0 +1,38 @@
+{% extends "foo/base.html" %}
+
+{% block head_title %}Example 4{% endblock %}
+
+{% block body %}
+    <h2>Regex Test</h2>
+    
+    <input id="re" type="text" size="50" />
+    <input id="try" type="button" value="Try" /><br />
+    <textarea id="match" type="text" cols="70" rows="5"></textarea>
+    <div id="result"></div>
+{% endblock %}
+
+{% block extra_body %}
+<script type="text/javascript">
+    $(function() {
+    	function test() {
+    	    var expression = $('#re').val();
+    	    var result = '';
+    	    try {
+    	    	var re = new RegExp(expression);
+    	    	//var re = eval(expression);
+    	    	var match = re.exec($('#match').val());
+    	    
+    	    	for (var idx in match) {
+    	        	result += match[idx] + '<br />';
+    	    	}
+    	    } catch(e) {
+    	    	result = e.message;
+    	    }
+    	    $('#result').html(result);
+    	}
+    	
+    	$('#match').keyup(test);
+    	$('#try').click(test);
+    });
+</script>
+{% endblock %}

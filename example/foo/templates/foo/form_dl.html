@@ -1,0 +1,17 @@
+{% for field in form %}
+	<dt>
+		<label for="{{ field.id }}">{{ field.label }}</label>
+		{% if field.required %}*{% endif %}
+	</dt>
+	<dd>
+		{{ field }}
+		{% if field.help_text %}{{ field.help_text }}{% endif %}
+		{% if field.errors %}
+			<ul>
+				{% for error in field.errors %}
+					<li>{{ error }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	</dd>
+{% endfor %}

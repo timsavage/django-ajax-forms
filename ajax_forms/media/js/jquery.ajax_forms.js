@@ -18,7 +18,7 @@
 
     $.fn.validation = function(fields, options) {
         // Setup options
-        var opts = $.extend({}, $.fn.validation.defaults, options);
+        var opts = $.extend({}, $.validation.defaults, options);
 
         return $(this).each(function() {
             var form = $(this);
@@ -30,7 +30,12 @@
                     field.data('validation', fields[name]);
                     // Bind events
                     for (var idx in opts.validation_events) {
-                        field.bind(opts.validation_events[idx], function() {
+                        field.bind(opts.validation_events[idx], function(e) {
+                            // Work around to prevent validation when tabbing
+                            // into a field.
+                            if (e.keyCode === 9) {
+                                return;
+                            }
                             validate_field($(this), opts);
                         });
                     }
@@ -53,25 +58,14 @@
                 }
 
                 if (first_fail) {
-                    first_fail.focus();
+                    first_fail
+                        .focus()
+                        .scroll();
                 }
                 return first_fail == null;
             });
         });
     };
-
-
-    // Custom error object
-    $.fn.validation.ValidationError = function(msg, params) {
-        params = params || [];
-        for(idx in params) {
-            msg = msg.replace(idx, params[idx]);
-        }
-        var err = new Error(msg);
-        err.name = "ValidationError";
-        return err;
-    }
-    var ValidationError = $.fn.validation.ValidationError;
 
 
     // Validate a single field
@@ -96,9 +90,9 @@
         try {
             if (value && value.length > 0) {
                 for (var rule in validation.rules) {
-                    var rule_func = $.fn.validation.rules[rule]
+                    var rule_func = $.validation.rules[rule]
                     if (rule_func) {
-                        rule_func(validation.rules[rule], value, validation.msgs, field[0].form);
+                        rule_func(field[0], validation.rules[rule], value, validation.msgs);
                     } else {
                         log('Rule not found: ' + rule);
                     }
@@ -130,9 +124,31 @@
         parent.removeClass(opts.style.processing);
         return field_valid;
     }
+    
+
+    // Validation "namespace"
+    $.validation = new Object();
+
+
+    // Rules placeholder
+    $.validation.rules = {};
+    
+
+    // Custom error object
+    $.validation.ValidationError = function(msg, params) {
+        params = params || [];
+        for(idx in params) {
+            msg = msg.replace(idx, params[idx]);
+        }
+        var err = new Error(msg);
+        err.name = "ValidationError";
+        return err;
+    }
+    var ValidationError = $.validation.ValidationError;
+
 
     // Default settings
-    $.fn.validation.defaults = {
+    $.validation.defaults = {
         // Type of form layout to interact with;
         // p | ul | table | dl
         layout: 'table',
@@ -152,14 +168,16 @@
             // Get the parent of a particular field element (mainly to handle
             // the case of tables)
             get_parent_element: function(field, layout) {
-                if (!field._parent) {
+                var parent = field.data('parent');
+                if (!parent) {
                     if (layout == 'table') {
-                        field._parent = field.parent().parent();
+                        parent = field.parent().parent();
                     } else {
-                        field._parent = field.parent();
+                        parent = field.parent();
                     }
+                    field.data('parent', parent);
                 }
-                return field._parent;
+                return parent;
             },
 
             // Show error message
@@ -173,6 +191,8 @@
                         .hide();
                     if (layout == 'table') {
                         errors.insertBefore(field);
+                    } else if (layout == 'dl') {
+                        errors.insertAfter(field);
                     } else {
                         field.parent().prepend(errors);
                     }
@@ -188,138 +208,6 @@
                 field.siblings('ul').fadeOut(function() { $(this).remove(); });
             }
         }
-    };
-
-
-    // Regular expressions
-    var DECIMAL_LENGTHS = /^[-\s0]*(\d*).?(\d*)\s*$/;
-    var IS_FLOAT = /^-?[0-9]*(\.?[0-9]*)$/;
-    var IS_INTEGER = /^-?[0-9]+$/;
-    var IS_TIME = /^([0-1]\d)|(2[0-3])|\d:[0-5]?\d(:[0-5]\d)?$/;
-
-    /* Validation methods, additional functions can be added to preform
-     * custom validation eg:
-     * $.fn.validation.rules['foo'] = function(arg, value, msgs) {
-     *     if (validation fail) {
-     *         throw new ValidationError(msgs['msg_code']);
-     *     }
-     * };
-     */
-    $.fn.validation.rules = {
-
-        'max_length': function(arg, value, msgs, form) {
-            if (value.length > arg) {
-                throw new ValidationError(msgs['max_length'], {
-                    '%(max)d': arg,
-                    '%(length)d': value.length
-                });
-            }
-        },
-
-        'min_length': function(arg, value, msgs, form) {
-            if (value.length < arg) {
-                throw new ValidationError(msgs['min_length'], {
-                    '%(min)d': arg,
-                    '%(length)d': value.length
-                });
-            }
-        },
-
-        'decimal_length': function(arg, value, msgs, form) {
-            var match = DECIMAL_LENGTHS.exec(value);
-            if (match) {
-                var max_digits = arg[0];
-                if (max_digits !== null && (match[1].length + match[2].length) > max_digits) {
-                    throw new ValidationError(msgs['max_digits'], {
-                        '%s': max_digits
-                    });
-                }
-
-                var max_decimal_places = arg[1];
-                if (max_decimal_places !== null && match[2].length > max_decimal_places) {
-                    throw new ValidationError(msgs['max_decimal_places'], {
-                        '%s': max_decimal_places
-                    });
-                }
-
-                if (max_digits !== null && max_decimal_places !== null) {
-                    var max_whole_digits = max_digits - max_decimal_places;
-                    if (match[1].length > max_whole_digits) {
-                        throw new ValidationError(msgs['max_whole_digits'], {
-                            '%s': max_whole_digits
-                        });
-                    }
-                }
-            }
-        },
-
-        'is_float': function(arg, value, msgs, form) {
-            value = $.trim(value);
-            if (!IS_FLOAT.test(value) || isNaN(parseFloat(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_integer': function(arg, value, msgs, form) {
-            value = $.trim(value);
-            if (!IS_INTEGER.test(value) || isNaN(parseInt(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_date': function(arg, value, msgs, form) {
-            var re = /^(\d{4}-\d{1,2}-\d{1,2})|(\d{2}\/\d{2}\/\d{2,4})$/;
-            if (!re.test($.trim(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_datetime': function(arg, value, msgs, form) {
-            /* see http://regexpal.com/ */
-            var re = /^(\d{4}-((0?\d)|(1[0-2]))-(([0-2]?\d)|(3[01])))|(((0?\d)|(1[0-2]))\/(([0-2]?\d)|(3[01]))\/\d{2}\d{2}?)$/;
-            if (!re.test($.trim(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'is_time': function(arg, value, msgs, form) {
-            if (!IS_TIME.test($.trim(value))) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'max_value': function(arg, value, msgs, form) {
-            var value = Number(value);
-            if (value > arg) {
-                throw new ValidationError(msgs['max_value'], {
-                    '%s': arg
-                });
-            }
-        },
-
-        'min_value': function(arg, value, msgs, form) {
-            var value = Number(value);
-            if (value < arg) {
-                throw new ValidationError(msgs['min_value'], {
-                    '%s': arg
-                });
-            }
-        },
-
-        'regex': function(arg, value, msgs, form) {
-            var re = RegExp(arg[0], arg[1]);
-            if (!re.test(value)) {
-                throw new ValidationError(msgs['invalid']);
-            }
-        },
-
-        'equal_to_field': function(arg, value, msgs, form) {
-            var other = $(form).find(':input[name='+arg+']').val();
-            if (other != value) {
-                throw new ValidationError(msgs['equal_to_field']);
-            }
-        }
-
     };
 
 })(jQuery);

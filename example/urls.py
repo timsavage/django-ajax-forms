@@ -9,5 +9,6 @@ urlpatterns = patterns('',
     url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
 
     # Catch all
+    url(r'test/', 'django.views.generic.simple.direct_to_template', {"template": "foo/test.html"}),
     url(r'^.*', 'django.views.generic.simple.direct_to_template', {"template": "foo/home.html"}),
 )
