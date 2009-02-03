@@ -25,7 +25,7 @@
 
             // Setup fields
             for (var name in fields) {
-                var field = form.find(':input[name='+name+']');
+                var field = $(':input[name='+name+']', form);
                 if (field) {
                     field.data('validation', fields[name]);
                     // Bind events
@@ -38,6 +38,11 @@
                             }
                             validate_field($(this), opts);
                         });
+                    }
+
+                    if (opts.add_required_indicators) {
+                        $('label[for=' + field[0].id + ']', form).after(
+                            '<span class="required">*</span>');
                     }
                 }
             }
@@ -92,7 +97,8 @@
                 for (var rule in validation.rules) {
                     var rule_func = $.validation.rules[rule]
                     if (rule_func) {
-                        rule_func(field[0], validation.rules[rule], value, validation.msgs);
+                        rule_func(field[0], validation.rules[rule], value,
+                            validation.msgs);
                     } else {
                         log('Rule not found: ' + rule);
                     }
@@ -153,6 +159,9 @@
         // p | ul | table | dl
         layout: 'table',
 
+        // Add required indicators to field labels
+        add_required_indicators: false,
+        
         // Events on which to perform validation
         validation_events: ['blur'],
 

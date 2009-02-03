@@ -18,7 +18,9 @@
 {% block extra_body %}
 <script type="text/javascript">
     $(function() {
-        $('form').validation({% render_ajax_fields form %});
+        $('form').validation({% render_ajax_fields form %}, {
+            add_required_indicators: true
+        });
     });
 </script>
 {% endblock %}
