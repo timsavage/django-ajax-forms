@@ -1,4 +1,5 @@
 {% extends "foo/base.html" %}
+{% load ajax_form_utils %}
 
 {% block head_title %}Example 1{% endblock %}
 
@@ -24,13 +25,12 @@ form .errorlist {
 
     <form method="post">
         <dl>
-            {% include "foo/form_dl.html" %}
+            {% as_dl form %}
             <dd><input type="submit" /></dd>
         </dl>
     </form>
 {% endblock %}
 
-{% load ajax_form_utils %}
 {% block extra_body %}
 <script type="text/javascript">
     $(function() {
