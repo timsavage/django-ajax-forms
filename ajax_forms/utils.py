@@ -3,7 +3,7 @@
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.urlresolvers import reverse
-from django.forms import Form
+from django.forms import BaseForm
 from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
 from django.utils.functional import Promise
@@ -23,7 +23,7 @@ json_serializer = LazyEncoder()
 
 
 def form_to_json(form):
-    if not isinstance(form, Form):
+    if not isinstance(form, BaseForm):
         raise TypeError(_("Expected Django Form"))
     ajax_directives = getattr(form, 'Ajax', None)
 
