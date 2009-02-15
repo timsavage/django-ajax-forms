@@ -130,7 +130,7 @@
         parent.removeClass(opts.style.processing);
         return field_valid;
     }
-    
+
 
     // Validation "namespace"
     $.validation = new Object();
@@ -138,7 +138,7 @@
 
     // Rules placeholder
     $.validation.rules = {};
-    
+
 
     // Custom error object
     $.validation.ValidationError = function(msg, params) {
@@ -161,7 +161,7 @@
 
         // Add required indicators to field labels
         add_required_indicators: false,
-        
+
         // Events on which to perform validation
         validation_events: ['blur'],
 
@@ -201,7 +201,7 @@
                     if (layout == 'table') {
                         errors.insertBefore(field);
                     } else if (layout == 'dl') {
-                        errors.insertAfter(field);
+                        field.parent().append(errors);
                     } else {
                         field.parent().prepend(errors);
                     }
