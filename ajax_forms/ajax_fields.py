@@ -23,7 +23,7 @@ def register(field, ajax_field):
 
 
 def factory(field_instance):
-    "Get a ajax_field instance for a feild instance"
+    "Get an ajax_field instance for a field instance"
     ajax_field = registry.get(type(field_instance), AjaxField)
     return ajax_field(field_instance)
 
