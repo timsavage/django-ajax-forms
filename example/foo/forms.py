@@ -36,7 +36,7 @@ class Example2(forms.Form):
     old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput(render_value=False))
     password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(render_value=False),
         help_text = "at least 6 characters (case sensitive)")
-    password2 = forms.CharField(label='New Password (again)', required=False, widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(label='New Password (again)', required=True, widget=forms.PasswordInput(render_value=False))
 
     class Ajax:
         rules = [
@@ -55,7 +55,7 @@ class Example3(forms.Form):
     email = forms.EmailField(label="E-mail", widget=forms.TextInput())
     password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(render_value=False),
         help_text = "at least 6 characters (case sensitive)")
-    password2 = forms.CharField(label='New Password (again)', required=False, widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(label='New Password (again)', required=True, widget=forms.PasswordInput(render_value=False))
 
     class Ajax:
         callback_url = 'ajax_example3'
