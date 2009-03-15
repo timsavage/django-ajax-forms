@@ -47,8 +47,8 @@
                 }
             }
 
-            // Setup form events
-            form.submit(function() {
+            // Add validation function to form
+            form.validate = function(event) {
                 var first_fail = null;
 
                 for (var name in fields) {
@@ -66,16 +66,22 @@
                     first_fail
                         .focus()
                         .scroll();
+                } else {
+                    if (opts.on_form_valid) opts.on_form_valid(event, form);
                 }
+
                 return first_fail == null;
-            });
+            }
+
+            // Setup form events
+            form.submit(form.validate);
         });
     };
 
 
     // Validate a single field
     function validate_field(field, opts) {
-        var parent = opts.callbacks.get_parent_element(field, opts.layout);
+        var parent = opts.callbacks.get_parent_element(field, opts);
         var field_valid = true;
         var validation = field.data('validation');
         var value = field.val();
@@ -110,12 +116,12 @@
             }
 
             // Clear existing error
-            opts.callbacks.clear_error(field, opts.layout);
+            opts.callbacks.clear_error(field, opts);
         } catch (e) {
             // Make sure error was thrown by validation.
             if (e.name && e.name == 'ValidationError') {
                 field_valid = false;
-                opts.callbacks.show_error(field, e.message, opts.layout);
+                opts.callbacks.show_error(field, e.message, opts);
             } else {
                 log(e.message);
                 throw e;
@@ -169,17 +175,21 @@
         style: {
             valid: 'valid',
             invalid: 'invalid',
-            processing: 'processing'
+            processing: 'processing',
+            error_list: 'errorlist'
         },
+
+        // Event fired when for is succuessfully validated, called when form is valid
+        on_form_valid: function(event, form) { },
 
         // Callback methods
         callbacks: {
             // Get the parent of a particular field element (mainly to handle
             // the case of tables)
-            get_parent_element: function(field, layout) {
+            get_parent_element: function(field, opts) {
                 var parent = field.data('parent');
                 if (!parent) {
-                    if (layout == 'table') {
+                    if (opts.layout == 'table') {
                         parent = field.parent().parent();
                     } else {
                         parent = field.parent();
@@ -190,17 +200,17 @@
             },
 
             // Show error message
-            show_error: function(field, msg, layout) {
-                var errors = field.siblings('ul');
+            show_error: function(field, msg, opts) {
+                var errors = field.siblings('ul.'+opts.style.error_list);
                 if (errors.length) {
                     errors.empty();
                 } else {
                     errors = $('<ul>')
-                        .addClass('errorlist')
+                        .addClass(opts.style.error_list)
                         .hide();
-                    if (layout == 'table') {
+                    if (opts.layout == 'table') {
                         errors.insertBefore(field);
-                    } else if (layout == 'dl') {
+                    } else if (opts.layout == 'dl') {
                         field.parent().append(errors);
                     } else {
                         field.parent().prepend(errors);
@@ -213,8 +223,10 @@
             },
 
             // Clear existing error message
-            clear_error: function(field, layout) {
-                field.siblings('ul').fadeOut(function() { $(this).remove(); });
+            clear_error: function(field, opts) {
+                field.siblings('ul.'+opts.style.error_list).fadeOut(function() {
+                    $(this).hide();
+                });
             }
         }
     };
