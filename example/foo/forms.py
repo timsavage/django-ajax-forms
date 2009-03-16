@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 
 
@@ -16,8 +18,7 @@ class Example1(forms.Form):
     typedchoicefield = forms.TypedChoiceField(label='TypedChoiceField', choices=CHOICES, empty_value=0, coerce=int)
     datefield = forms.DateField(label='DateField')
     datetimefield = forms.DateTimeField(label='DateTimeField')
-    #decimalfield = forms.DecimalField(label='DecimalField', max_value=2291.3321, min_value=432.3244, max_digits=9, decimal_places=4)
-    decimalfield = forms.DecimalField(label='DecimalField', min_value=432.3244, max_digits=9, decimal_places=4)
+    decimalfield = forms.DecimalField(label='DecimalField', max_value=Decimal('2291.3321'), min_value=Decimal('432.3244'), max_digits=9, decimal_places=4)
     emailfield = forms.EmailField(label='EmailField')
     #filefield = forms.FileField(label='FileField')
     floatfield = forms.FloatField(label='FloatField', max_value=23.6, min_value=-5.32)

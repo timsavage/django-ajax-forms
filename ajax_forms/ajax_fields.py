@@ -40,15 +40,18 @@ class AjaxField(object):
         "Add an error message to be sent to client"
         self._error_messages[msg_key] = self.field.error_messages.get(msg_key)
 
-    def add_rule(self, rule_name, value=None, msg_key=None):
-        "Add a validator that takes a single param"
+    def add_rule(self, rule_name, value=None, msg_key=None, cast=None):
+        "Add a validation rule"
         if msg_key is None:
             msg_key = rule_name
         if value is None:
             value = getattr(self.field, rule_name, None)
         if value:
             self.add_error_message(msg_key)
-            self._rules[rule_name] = value
+            if cast:
+                self._rules[rule_name] = cast(value)
+            else:
+                self._rules[rule_name] = value
 
     def parse(self):
         "Hook for doing any extra parsing in sub class"
@@ -122,10 +125,14 @@ class AjaxFloatField(AjaxNumericField):
 register(forms.FloatField, AjaxFloatField)
 
 
-class AjaxDecimalField(AjaxFloatField):
+class AjaxDecimalField(AjaxField):
 
     def parse(self):
+        self.add_rule('is_float', True, 'invalid')
         super(AjaxDecimalField, self).parse()
+
+        self.add_rule('max_value', cast=lambda v: str(v))
+        self.add_rule('min_value', cast=lambda v: str(v))
 
         max_digits = getattr(self.field, 'max_digits', None),
         decimal_places = getattr(self.field, 'decimal_places', None)
