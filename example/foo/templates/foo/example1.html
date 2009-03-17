@@ -31,6 +31,14 @@ form .errorlist {
     </form>
 {% endblock %}
 
+{% block javascript %}
+    <!--script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.ajax_forms.js"></script>
+    <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.ajax_forms.validation.js"></script-->
+    <!-- Put scripts last as per Yahoo Best Practices @see http://developer.yahoo.com/performance/rules.html#minify -->
+    <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.ajax_forms.min.js"></script>
+    <script type="text/javascript" src="{{ MEDIA_URL }}js/jquery.ajax_forms.validation.min.js"></script>
+{% endblock %}
+
 {% block extra_body %}
 <script type="text/javascript">
     $(function() {
