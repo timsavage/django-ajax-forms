@@ -35,7 +35,7 @@
         max_length: function(field, arg, value, msgs) {
             if (value.length > arg) {
                 throw new ValidationError(msgs['max_length'], {
-                    '%(max)d': arg,
+                    '%(limit_value)s': arg,
                     '%(length)d': value.length
                 });
             }
@@ -44,7 +44,7 @@
         min_length: function(field, arg, value, msgs) {
             if (value.length < arg) {
                 throw new ValidationError(msgs['min_length'], {
-                    '%(min)d': arg,
+                    '%(limit_value)s': arg,
                     '%(length)d': value.length
                 });
             }
@@ -117,7 +117,7 @@
             var value = Number(value);
             if (value > arg) {
                 throw new ValidationError(msgs['max_value'], {
-                    '%s': arg
+                    '%(limit_value)s': arg
                 });
             }
         },
@@ -126,7 +126,7 @@
             var value = Number(value);
             if (value < arg) {
                 throw new ValidationError(msgs['min_value'], {
-                    '%s': arg
+                    '%(limit_value)s': arg
                 });
             }
         },
