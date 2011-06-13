@@ -1,6 +1,5 @@
-# Copyright 2009 Tim Savage <tim.savage@jooceylabs.com>
-# See LICENSE for licence information
-
+# Copyright 2009 Tim Savage <tim.savage@poweredbypenguins.org>
+# Licensed under the terms of the BSD License (see LICENSE)
 from django.forms import Form
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
