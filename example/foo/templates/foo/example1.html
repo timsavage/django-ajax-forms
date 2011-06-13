@@ -1,0 +1,46 @@
+{% extends "foo/base.html" %}
+{% load ajax_form_utils %}
+
+{% block head_title %}Example 1{% endblock %}
+
+{% block extra_style %}
+form dl {}
+form dt {
+    float: left;
+    width: 12em;
+}
+form dd {
+    margin: 0 0 1em 12.5em;
+}
+form .errorlist {
+    margin: 0;
+    padding: 0.5em 0 0 2em;
+    color: red;
+}
+{% endblock %}
+
+{% block body %}
+    <h2>Example 1</h2>
+    <p>Form with all basic field types.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <dl>
+            {% as_dl form %}
+            <dd><input type="submit" /></dd>
+        </dl>
+    </form>
+{% endblock %}
+
+{% block extra_body %}
+<script type="text/javascript">
+    $(function() {
+        $('#id_boolean').focus();
+        $('form').validation({% render_ajax_fields form %}, {
+            layout: 'dl',
+            validation_events: ['blur', 'keyup'],
+            add_required_indicators: true
+        });
+    });
+</script>
+{% endblock %}

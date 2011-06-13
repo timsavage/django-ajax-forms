@@ -1,3 +1,5 @@
 glob:*.pyc
 glob:.ropeproject*
 glob:*~
+glob:dev.db
+glob:venv/

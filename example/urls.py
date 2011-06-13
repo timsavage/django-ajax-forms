@@ -1,12 +1,18 @@
-from django.conf import settings
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import patterns, include, url
 
+# Uncomment the next two lines to enable the admin:
+# from django.contrib import admin
+# admin.autodiscover()
 
 urlpatterns = patterns('',
+    # Examples:
     (r'^foo/', include('example.foo.urls')),
 
-    # Trick for Django to support static files (security hole: only for Dev environement! remove this on Prod!!!)
-    url(r'^media/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
+    # Uncomment the admin/doc line below to enable admin documentation:
+    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+
+    # Uncomment the next line to enable the admin:
+    # url(r'^admin/', include(admin.site.urls)),
 
     # Catch all
     url(r'test/', 'django.views.generic.simple.direct_to_template', {"template": "foo/test.html"}),
