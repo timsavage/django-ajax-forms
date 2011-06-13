@@ -1,10 +1,7 @@
 from decimal import Decimal
-
 from django import forms
 
-
 class Example1(forms.Form):
-
     CHOICES = (
         (1, 'First'),
         (2, 'Second'),
@@ -31,13 +28,11 @@ class Example1(forms.Form):
     timefield = forms.TimeField(label='TimeField')
     urlfield = forms.URLField(label='URLField')
 
-
 class Example2(forms.Form):
-
-    old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput(render_value=False))
-    password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(render_value=False),
+    old_password = forms.CharField(label='Old Password', widget=forms.PasswordInput())
+    password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(),
         help_text = "at least 6 characters (case sensitive)")
-    password2 = forms.CharField(label='New Password (again)', required=True, widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(label='New Password (again)', required=True, widget=forms.PasswordInput())
 
     class Ajax:
         rules = [
@@ -49,14 +44,13 @@ class Example2(forms.Form):
 
 
 class Example3(forms.Form):
-
     username = forms.RegexField(max_length=30, regex=r'^[\w\.\-]+$',  widget=forms.TextInput(),
         help_text = "Alphanumeric value must with at most 30 characters",
         error_message = "This value must contain only letters, numbers and underscores.")
     email = forms.EmailField(label="E-mail", widget=forms.TextInput())
-    password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(render_value=False),
+    password1 = forms.CharField(label='New Password', min_length=6, widget=forms.PasswordInput(),
         help_text = "at least 6 characters (case sensitive)")
-    password2 = forms.CharField(label='New Password (again)', required=True, widget=forms.PasswordInput(render_value=False))
+    password2 = forms.CharField(label='New Password (again)', required=True, widget=forms.PasswordInput())
 
     class Ajax:
         callback_url = 'ajax_example3'

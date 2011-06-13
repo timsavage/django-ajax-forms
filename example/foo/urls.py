@@ -1,7 +1,6 @@
 from django.conf.urls.defaults import *
 
-from foo.forms import Example3
-
+from forms import Example3
 
 urlpatterns = patterns('',
     url(r'^1/$', 'foo.views.example1', name='example1'),

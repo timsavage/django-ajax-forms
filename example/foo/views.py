@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from foo.forms import Example1, Example2, Example3, Example4
+from forms import Example1, Example2, Example3, Example4
 
 
 def example1(request, form_class=Example1,
