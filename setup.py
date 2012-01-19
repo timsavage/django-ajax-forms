@@ -21,15 +21,14 @@ CLASSIFIERS += [
 ]
 
 setup(
-    name = "django-ajax-forms",
-    version = ajax_forms.__version__,
-    url = "http://code.google.com/p/django-ajax-forms/",
-    author = "Tim Savage",
-    author_email = "tim.savage@poweredbypenguins.org",
-    license = "BSD License",
-    description = "Client side JavaScript validation for any Django form.",
+    name="django-ajax-forms",
+    version=ajax_forms.__version__,
+    url="http://code.google.com/p/django-ajax-forms/",
+    author="Tim Savage",
+    author_email="tim.savage@poweredbypenguins.org",
+    license="BSD License",
+    description="Client side JavaScript validation for any Django form.",
     long_description=open(join(dirname(__file__), 'README')).read(),
-    long_description = open('README').read(),
     classifiers=CLASSIFIERS,
     platforms=['OS Independent'],
     packages=find_packages(exclude=["example", "example.*"]),
