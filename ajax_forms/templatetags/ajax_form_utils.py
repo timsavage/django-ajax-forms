@@ -16,7 +16,7 @@ def render_ajax_fields(form):
     return form_to_json(form)
 
 @register.simple_tag
-def as_dl(form, seperate_errors=True):
+def as_dl(form, errors_on_separate_row=True):
     """
     Render form as a dl construct
 
@@ -30,4 +30,4 @@ def as_dl(form, seperate_errors=True):
         u'<li>%s</li>', 
         '</dd>', 
         u' %s', 
-        self.seperate_errors)
+        errors_on_separate_row)

@@ -38,8 +38,7 @@ def form_to_json(form):
         raise TypeError(_("Expected Django Form instance"))
 
     # Check cache first
-    cache_key = _create_cache_key(form)
-    result = cache.get(cache_key, None)
+    result = getattr(form.__class__, '_json', None)
     if result:
         return result   
     
@@ -73,8 +72,8 @@ def form_to_json(form):
     for name, rules in getattr(ajax_directives, 'rules', []):
         html_name = form.add_prefix(name)
         try:
-            # HACK: This rules parameter requies a prefix
-            if (rules.has_key('equal_to_field')):
+            # HACK: This rules parameter requires a prefix
+            if rules.has_key('equal_to_field'):
                 rules['equal_to_field'] = form.add_prefix(rules['equal_to_field'])
             ajax_fields[html_name].setdefault('rules', {}).update(rules)
         except KeyError:
@@ -90,5 +89,5 @@ def form_to_json(form):
 
     # Generate result and store in cache
     result = json_serializer.encode(ajax_fields)
-    cache.set(cache_key, result)
+    setattr(form.__class__, '_json', result)
     return result
