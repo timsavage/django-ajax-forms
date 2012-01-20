@@ -2,12 +2,10 @@
 # Licensed under the terms of the BSD License (see LICENSE)
 import re
 from decimal import Decimal
-
 from django import forms
 from django.core import validators
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext as _
-
 
 __all__ = (
     'AlreadyRegistered', 'register', 'factory',
@@ -15,7 +13,6 @@ __all__ = (
     'AjaxDecimalField', 'AjaxEmailField', 'AjaxFloatField', 
     'AjaxIntegerField', 'AjaxNumericField', 'AjaxTimeField'
 )
-
 
 class AlreadyRegistered(Exception):
     """
@@ -47,10 +44,20 @@ def factory(field_instance):
 
 # Built in fields
 
+# These fields require nothing specialised they will be assigned AjaxField by
+# default in the factory method:
+#   CharField, EmailField, IPAddressField, RegexField, URLField BooleanField, NullBooleanField, 
+#   ChoiceField, MultipleChoiceField, TypedChoiceField
+#
+# File fields have limited capability for validation on the client side and
+# will be treated the same as the above fields, these include:
+#   FileField, FilePathField, ImageField
+
 class AjaxField(object):
     """
-    Base field mask
+    Base Ajax Field that handles most fields. 
     """
+    __slots__ = ('field', '_rules', '_error_messages', )
 
     def __init__(self, field_instance):
         self.field = field_instance
@@ -100,7 +107,7 @@ class AjaxField(object):
 
     def to_ajax(self):
         """
-        Convert field rules into json
+        Convert field rules into a JSON serializable dictionary
         """
         if self._rules is None:
             self._rules = SortedDict()
@@ -112,19 +119,12 @@ class AjaxField(object):
             'required': self.field.required,
             'rules': self._rules,
         }
-
-
-# These fields require nothing specialised they will be assigned AjaxField by
-# default in the factory method:
-#   CharField, EmailField, IPAddressField, RegexField, URLField BooleanField, NullBooleanField, 
-#   ChoiceField, MultipleChoiceField, TypedChoiceField
-#
-# File fields have limited capability for validation on the client side and
-# will be treated the same as the above fields, these include:
-#   FileField, FilePathField, ImageField
-
+        
         
 class AjaxFloatField(AjaxField):
+    """
+    Ajax Field for handling `forms.FloatField` fields.
+    """
     def parse(self):
         self.add_rule('is_float', True, 'invalid')
         super(AjaxFloatField, self).parse()
@@ -133,12 +133,15 @@ register(forms.FloatField, AjaxFloatField)
 
 
 class AjaxDecimalField(AjaxField):
+    """
+    Ajax Field for handling `forms.DecimalField` fields.
+    """
     def parse(self):
         self.add_rule('is_float', True, 'invalid')
         super(AjaxDecimalField, self).parse()
 
-        self.add_rule('max_value', cast=lambda v: str(v))
-        self.add_rule('min_value', cast=lambda v: str(v))
+        self.add_rule('max_value', cast=str)
+        self.add_rule('min_value', cast=str)
 
         max_digits = getattr(self.field, 'max_digits', None),
         decimal_places = getattr(self.field, 'decimal_places', None)
@@ -156,6 +159,9 @@ register(forms.DecimalField, AjaxDecimalField)
 
 
 class AjaxIntegerField(AjaxField):
+    """
+    Ajax Field for handling `forms.IntegerField` fields.
+    """
     def parse(self):
         self.add_rule('is_integer', True, 'invalid')
         super(AjaxIntegerField, self).parse()
@@ -164,6 +170,9 @@ register(forms.IntegerField, AjaxIntegerField)
 
 
 class AjaxDateField(AjaxField):
+    """
+    Ajax Field for handling `forms.DateField` fields.
+    """
     def parse(self):
         super(AjaxDateField, self).parse()
         self.add_rule('is_date', True, 'invalid')
@@ -172,6 +181,9 @@ register(forms.DateField, AjaxDateField)
 
 
 class AjaxDateTimeField(AjaxField):
+    """
+    Ajax Field for handling `forms.DateTimeField` fields.
+    """
     def parse(self):
         super(AjaxDateTimeField, self).parse()
         self.add_rule('is_datetime', True, 'invalid')
@@ -180,6 +192,9 @@ register(forms.DateTimeField, AjaxDateTimeField)
 
 
 class AjaxTimeField(AjaxField):
+    """
+    Ajax Field for handling `forms.TimeField` fields.
+    """
     def parse(self):
         super(AjaxTimeField, self).parse()
         self.add_rule('is_time', True, 'invalid')
