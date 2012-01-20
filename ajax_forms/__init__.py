@@ -1,5 +1,5 @@
 # Copyright 2009 Tim Savage <tim.savage@poweredbypenguins.org>
 # Licensed under the terms of the BSD License (see LICENSE)
 
-VERSION = (0, 1, 0, 'alpha')
+VERSION = (0, 3, 0, 'beta')
 __version__ = '.'.join(map(str, VERSION))

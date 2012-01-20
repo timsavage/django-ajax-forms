@@ -32,6 +32,6 @@ setup(
     classifiers=CLASSIFIERS,
     platforms=['OS Independent'],
     packages=find_packages(exclude=["example", "example.*"]),
-    package_data = {'ajax_forms': ['media/js/*.js']},
+    package_data = {'ajax_forms': ['static/js/*.js']},
     zip_safe = False,
 )
