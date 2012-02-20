@@ -3,3 +3,6 @@ syntax: glob
 *~
 dev.db
 build/*
+*.tgz
+.name
+workspace.xml
